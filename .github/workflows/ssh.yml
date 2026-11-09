@@ -4,28 +4,22 @@ on:
   workflow_dispatch:
     inputs:
       timeout:
-        description: 'Timeout in minutes (max 360)'
-        required: false
-        default: '360'
+        description: 'Session timeout in minutes (1–360)'
+        required: true
+        default: '60'
         type: string
 
 jobs:
   ssh-runner:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: ${{ fromJSON(inputs.timeout) }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Tmate SSH Session
-        uses: mxschmitt/action-tmate@v3
+      - name: Start SSH Session
+        uses: owenthereal/action-upterm@v2
         with:
           limit-access-to-actor: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Hold runner open until disconnected
-        run: |
-          echo "SSH session is active. Waiting for disconnect..."
-          # Keeps the workflow alive until you manually cancel it or it times out
-          sleep 10000000
+          wait-timeout-minutes: ${{ inputs.timeout }}
